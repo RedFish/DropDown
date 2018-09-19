@@ -311,6 +311,15 @@ public final class DropDown: UIView {
 		didSet { reloadAllComponents() }
 	}
 
+    /**
+     The color of the text if cell is selected.
+     
+     Changing the text color automatically reloads the drop down.
+     */
+    @objc public dynamic var selectedTextColor = DPDConstant.UI.TextColor {
+        didSet { reloadAllComponents() }
+    }
+    
 	/**
 	The font of the text for each cells of the drop down.
 
@@ -371,6 +380,15 @@ public final class DropDown: UIView {
 	public var cellConfiguration: ConfigurationClosure? {
 		didSet { reloadAllComponents() }
 	}
+    
+    /**
+     The height of the dropdown
+     
+     @see: https://github.com/AssistoLab/DropDown/issues/34
+     */
+    public var dropDownHeight: CGFloat = 0.0 {
+        didSet { setNeedsUpdateConstraints() }
+    }
     
     /**
      A advanced formatter for the cells. Allows customization when custom cells are used
@@ -518,35 +536,41 @@ private extension DropDown {
 
 extension DropDown {
 
-	public override func updateConstraints() {
-		if !didSetupConstraints {
-			setupConstraints()
-		}
-
-		didSetupConstraints = true
-
-		let layout = computeLayout()
-
-		if !layout.canBeDisplayed {
-			super.updateConstraints()
-			hide()
-
-			return
-		}
-
-		xConstraint.constant = layout.x
-		yConstraint.constant = layout.y
-		widthConstraint.constant = layout.width
-		heightConstraint.constant = layout.visibleHeight
-
-		tableView.isScrollEnabled = layout.offscreenHeight > 0
-
-		DispatchQueue.main.async { [weak self] in
-			self?.tableView.flashScrollIndicators()
-		}
-
-		super.updateConstraints()
-	}
+    public override func updateConstraints() {
+        if !didSetupConstraints {
+            setupConstraints()
+        }
+        
+        didSetupConstraints = true
+        
+        let layout = computeLayout()
+        
+        if !layout.canBeDisplayed {
+            super.updateConstraints()
+            hide()
+            return
+        }
+        
+        xConstraint.constant = layout.x
+        yConstraint.constant = layout.y
+        widthConstraint.constant = layout.width
+        
+        // Change height of dropdown
+        if dropDownHeight > 0 && dropDownHeight <= layout.visibleHeight {
+            heightConstraint.constant = dropDownHeight
+        } else {
+            heightConstraint.constant = layout.visibleHeight
+        }
+        
+        // Enable scrolling if offscreen content or dropdown height is set
+        tableView.isScrollEnabled = layout.offscreenHeight > 0 || dropDownHeight > 0
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.tableView.flashScrollIndicators()
+        }
+        
+        super.updateConstraints()
+    }
 
 	fileprivate func setupConstraints() {
 		translatesAutoresizingMaskIntoConstraints = false

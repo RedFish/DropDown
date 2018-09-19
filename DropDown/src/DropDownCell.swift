@@ -54,6 +54,13 @@ extension DropDownCell {
 					self.backgroundColor = .clear
 				}
 			}
+            
+            if selected {
+                self.optionLabel.textColor = DropDown.appearance().selectedTextColor
+            }
+            else {
+                self.optionLabel.textColor = DropDown.appearance().textColor
+            }
 		}
 		
 		if animated {
